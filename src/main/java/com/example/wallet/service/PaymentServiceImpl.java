@@ -2,7 +2,7 @@ package com.example.wallet.service;
 
 import com.example.wallet.dto.PaymentCheckRequest;
 import com.example.wallet.dto.PaymentRequest;
-import com.example.wallet.dto.WalletRequest;
+import com.example.wallet.dto.RollbackWalletRequest;
 import com.example.wallet.entity.Favour;
 import com.example.wallet.entity.Payment;
 import com.example.wallet.entity.PaymentStatus;
@@ -10,7 +10,10 @@ import com.example.wallet.entity.Wallet;
 import com.example.wallet.repository.PaymentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -29,11 +32,15 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final WalletServiceImpl walletService;
 
+    private final KafkaTemplate<String, String> kafkaTemplate;
+
     @Autowired
-    public PaymentServiceImpl(PaymentRepository paymentRepository, FavourServiceImpl favourService, WalletServiceImpl walletService) {
+    public PaymentServiceImpl(PaymentRepository paymentRepository, FavourServiceImpl favourService,
+                              WalletServiceImpl walletService, KafkaTemplate<String, String> kafkaTemplate) {
         this.paymentRepository = paymentRepository;
         this.favourService = favourService;
         this.walletService = walletService;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
 
@@ -50,6 +57,9 @@ public class PaymentServiceImpl implements PaymentService {
 
             paymentRepository.save(payment);
 
+            kafkaTemplate.send("payment", "Payment id: " + payment.getId() +
+                    " and his payment is checked: " + payment.getIsChecked());
+
             return "Order is checked!";
 
         } else  {
@@ -60,13 +70,21 @@ public class PaymentServiceImpl implements PaymentService {
 
     }
 
+    @Transactional
     @Override
-    public String addStatus(PaymentRequest paymentRequest, int id) {
+    public String createPayment(PaymentRequest paymentRequest, int id) {
 
 
         Payment payment = paymentRepository.getById(id);
 
         Favour favour = favourService.getByIdFavor(paymentRequest.getFavourRequest().getId());
+
+        Wallet wallet = walletService.getByIdWallet(paymentRequest.getWalletId().getId());
+
+        if(wallet.getSumma().compareTo(paymentRequest.getPrice()) < 0) {
+
+            return "You don't have money! Sorry!";
+        }
 
         if(payment.getIsChecked().equals(Boolean.TRUE)) {
 
@@ -76,9 +94,12 @@ public class PaymentServiceImpl implements PaymentService {
             payment.setFavour(favour);
             payment.setSumOfFavour(paymentRequest.getPrice());
             payment.setAccountCheck(paymentRequest.getAccountCheck());
+            wallet.setSumma(wallet.getSumma().subtract(payment.getSumOfFavour()));
+
+            kafkaTemplate.send("payment", "Payment id: " + payment.getId() +
+                    " and his payment status: " + payment.getStatus());
 
             paymentRepository.save(payment);
-
             return "Payment Created";
         }else {
             return "You have some with problem with AccountCheck or SumOfFavour";
@@ -86,28 +107,29 @@ public class PaymentServiceImpl implements PaymentService {
 
     }
 
+    @Transactional
     @Override
-    public String setStatus(int id, WalletRequest walletRequest) {
+    public String confirmPayment(int id, RollbackWalletRequest walletRequest) {
 
         Payment payment = paymentRepository.getById(id);
-
-        Wallet wallet = walletService.getByIdWallet(walletRequest.getWalletId().getId());
 
         payment.setFinished(Boolean.TRUE);
 
         if(payment.getFinished().equals(Boolean.TRUE)) {
             payment.setStatus(PaymentStatus.STATUS_SUCCESS);
-            wallet.setSumma(wallet.getSumma().subtract(payment.getSumOfFavour()));
         }
         payment.setUpdated_at(Timestamp.from(Instant.now()));
 
         paymentRepository.save(payment);
 
+        kafkaTemplate.send("payment", "Payment id: " + payment.getId() +
+                " and his payment status confirm: " + payment.getStatus());
+
         return "Your status in payment: " + payment.getStatus();
     }
 
     @Override
-    public String rollbackPayment(int id, WalletRequest walletRequest) {
+    public String rollbackPayment(int id, RollbackWalletRequest walletRequest) {
         Payment payment = paymentRepository.getById(id);
 
         Wallet wallet = walletService.getByIdWallet(walletRequest.getWalletId().getId());
@@ -119,11 +141,17 @@ public class PaymentServiceImpl implements PaymentService {
             if(Milli < 1080000) {
                 payment.setStatus(PaymentStatus.STATUS_ROLLBACK);
                 wallet.setSumma(wallet.getSumma().add(payment.getSumOfFavour()));
+                kafkaTemplate.send("payment", "Payment id: " + payment.getId() +
+                        " and his payment status confirm: " + payment.getStatus());
             } else {
+                kafkaTemplate.send("payment", "Payment id: " + payment.getId() + " not to rollbacked");
                 return "3 days gone";
             }
         } else if(payment.getStatus().equals(PaymentStatus.STATUS_CREATED)) {
             payment.setStatus(PaymentStatus.STATUS_ROLLBACK);
+            wallet.setSumma(wallet.getSumma().add(payment.getSumOfFavour()));
+            kafkaTemplate.send("payment", "Payment id: " + payment.getId() +
+                    " and his payment status confirm: " + payment.getStatus());
         } else {
             return "You dont have payment or your status fail";
         }
@@ -136,7 +164,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public String getByStatus(String status) {
+    public String getByStatusPayment(String status) {
 
         List<Payment> payment = paymentRepository.getByStatus(status);
 

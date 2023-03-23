@@ -1,5 +1,6 @@
 package com.example.wallet.service;
 
+import com.example.wallet.dto.WalletRequest;
 import com.example.wallet.entity.Wallet;
 import com.example.wallet.repository.WalletRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,5 +23,18 @@ public class WalletServiceImpl implements WalletService{
         Wallet wallet = walletRepository.getById(id);
 
         return wallet;
+    }
+
+    @Override
+    public String addWallet(WalletRequest walletRequest) {
+
+        Wallet wallet = new Wallet();
+
+        wallet.setSumma(walletRequest.getSummaOfWallet());
+        wallet.setUser(wallet.getUser());
+
+        walletRepository.save(wallet);
+
+        return "Wallet Created!";
     }
 }

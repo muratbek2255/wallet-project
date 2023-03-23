@@ -1,5 +1,6 @@
 package com.example.wallet.dto;
 
+import com.example.wallet.entity.Wallet;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,4 +18,6 @@ public class PaymentRequest {
     private String accountCheck;
 
     private FavourRequest favourRequest;
+
+    private Wallet walletId;
 }

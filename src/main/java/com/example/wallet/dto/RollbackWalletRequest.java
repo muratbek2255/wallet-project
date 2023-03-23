@@ -1,20 +1,16 @@
 package com.example.wallet.dto;
 
 
+import com.example.wallet.entity.Wallet;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
 
 @Getter
 @Setter
 @RequiredArgsConstructor
-public class WalletRequest {
+public class RollbackWalletRequest {
 
-    private Integer id;
-
-    private BigDecimal summaOfWallet;
-
-    private UserRequest userRequest;
+    private Wallet walletId;
 }

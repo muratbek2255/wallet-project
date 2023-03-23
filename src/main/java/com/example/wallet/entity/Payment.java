@@ -9,6 +9,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.time.Instant;
 
 
 @Entity
@@ -45,6 +46,7 @@ public class Payment {
 
     @Column(name = "is_finished")
     Boolean finished;
+
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "favour_id")

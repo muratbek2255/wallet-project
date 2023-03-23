@@ -26,6 +26,7 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     implementation 'org.springframework.kafka:spring-kafka'
     implementation 'com.twilio.sdk:twilio:9.2.4'
+    implementation 'org.springframework.kafka:spring-kafka:3.0.4'
 
     compileOnly 'org.projectlombok:lombok'
 

@@ -2,7 +2,7 @@ package com.example.wallet.controller;
 
 import com.example.wallet.dto.PaymentCheckRequest;
 import com.example.wallet.dto.PaymentRequest;
-import com.example.wallet.dto.WalletRequest;
+import com.example.wallet.dto.RollbackWalletRequest;
 import com.example.wallet.service.PaymentServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.query.Param;
@@ -30,21 +30,21 @@ public class PaymentController {
     @PutMapping("/{id}")
     public ResponseEntity<String> addPayment(@RequestBody PaymentRequest paymentRequest,
                                              @PathVariable int id) {
-        return ResponseEntity.status(201).body(paymentService.addStatus(paymentRequest, id));
+        return ResponseEntity.status(201).body(paymentService.createPayment(paymentRequest, id));
     }
 
     @PutMapping("/setStatus/{id}")
-    public ResponseEntity<String> updateStatus(@PathVariable int id, @RequestBody WalletRequest walletRequest) {
-        return ResponseEntity.status(201).body(paymentService.setStatus(id, walletRequest));
+    public ResponseEntity<String> updateStatus(@PathVariable int id, @RequestBody RollbackWalletRequest walletRequest) {
+        return ResponseEntity.status(201).body(paymentService.confirmPayment(id, walletRequest));
     }
 
     @PutMapping("/rollbackStatus/{id}")
-    public ResponseEntity<String> rollbackStatus(@PathVariable int id, WalletRequest walletRequest) {
+    public ResponseEntity<String> rollbackStatus(@PathVariable int id, @RequestBody RollbackWalletRequest walletRequest) {
         return ResponseEntity.status(201).body(paymentService.rollbackPayment(id, walletRequest));
     }
 
     @GetMapping("/status")
     public ResponseEntity<String> getByStatus(@Param("status") String status) {
-        return ResponseEntity.status(200).body(paymentService.getByStatus(status));
+        return ResponseEntity.status(200).body(paymentService.getByStatusPayment(status));
     }
 }
