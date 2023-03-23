@@ -8,6 +8,7 @@ import com.example.wallet.entity.Payment;
 import com.example.wallet.entity.PaymentStatus;
 import com.example.wallet.entity.Wallet;
 import com.example.wallet.repository.PaymentRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -170,5 +171,11 @@ public class PaymentServiceImpl implements PaymentService {
 
         return "Payment with status: " + payment;
 
+    }
+
+    @Scheduled(initialDelay = 1000L, fixedDelay = 3000L)
+    public void getAllStatusPayment() {
+
+        System.out.println("Hello world!");
     }
 }
