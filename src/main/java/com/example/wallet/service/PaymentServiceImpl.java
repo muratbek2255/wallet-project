@@ -143,7 +143,7 @@ public class PaymentServiceImpl implements PaymentService {
                 payment.setStatus(PaymentStatus.STATUS_ROLLBACK);
                 wallet.setSumma(wallet.getSumma().add(payment.getSumOfFavour()));
                 kafkaTemplate.send("payment", "Payment id: " + payment.getId() +
-                        " and his payment status confirm: " + payment.getStatus());
+                        " and his payment status rollback: " + payment.getStatus());
             } else {
                 kafkaTemplate.send("payment", "Payment id: " + payment.getId() + " not to rollbacked");
                 return "3 days gone";
@@ -152,7 +152,7 @@ public class PaymentServiceImpl implements PaymentService {
             payment.setStatus(PaymentStatus.STATUS_ROLLBACK);
             wallet.setSumma(wallet.getSumma().add(payment.getSumOfFavour()));
             kafkaTemplate.send("payment", "Payment id: " + payment.getId() +
-                    " and his payment status confirm: " + payment.getStatus());
+                    " and his payment status rollback: " + payment.getStatus());
         } else {
             return "You dont have payment or your status fail";
         }
