@@ -7,16 +7,14 @@ import com.example.wallet.entity.Favour;
 import com.example.wallet.entity.Payment;
 import com.example.wallet.entity.PaymentStatus;
 import com.example.wallet.entity.Wallet;
+import com.example.wallet.events.CreateEvents;
 import com.example.wallet.repository.PaymentRepository;
 
 import lombok.extern.slf4j.Slf4j;
-import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +30,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
 
-    private ApplicationEventPublisher applicationEventPublisher;
+    private ApplicationEventPublisher eventPublisher;
 
     private final FavourServiceImpl favourService;
 
@@ -40,18 +38,17 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
 
-    @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    private static int c = 0;
 
     @Autowired
     public PaymentServiceImpl(PaymentRepository paymentRepository, FavourServiceImpl favourService,
-                              WalletServiceImpl walletService, KafkaTemplate<String, String> kafkaTemplate) {
+                              WalletServiceImpl walletService, KafkaTemplate<String, String> kafkaTemplate, JdbcTemplate jdbcTemplate) {
         this.paymentRepository = paymentRepository;
         this.favourService = favourService;
         this.walletService = walletService;
         this.kafkaTemplate = kafkaTemplate;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
 
@@ -109,6 +106,12 @@ public class PaymentServiceImpl implements PaymentService {
 
             kafkaTemplate.send("payment", "Payment id: " + payment.getId() +
                     " and his payment status: " + payment.getStatus());
+
+            CreateEvents publisher = new CreateEvents(
+                    this,
+                    "Add in DB and CREATE New Payment!"
+            );
+            eventPublisher.publishEvent(publisher);
 
             paymentRepository.save(payment);
             return "Payment Created";

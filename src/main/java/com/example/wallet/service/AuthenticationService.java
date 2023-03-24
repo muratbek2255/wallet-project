@@ -6,8 +6,10 @@ import com.example.wallet.dto.AuthenticationResponse;
 import com.example.wallet.dto.RegistrationRequest;
 import com.example.wallet.entity.ROLE;
 import com.example.wallet.entity.User;
+import com.example.wallet.events.CreateEvents;
 import com.example.wallet.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,6 +26,8 @@ public class AuthenticationService {
     private final JwtService jwtService;
 
     private final AuthenticationManager authenticationManager;
+
+    private ApplicationEventPublisher eventPublisher;
 
     private final NewService newService;
 
@@ -59,6 +63,12 @@ public class AuthenticationService {
         AuthenticationResponse authenticationResponse = new AuthenticationResponse(
                 jwtToken
         );
+
+        CreateEvents publisher = new CreateEvents(
+                this,
+                "Add in DB and CREATE New User!"
+        );
+        eventPublisher.publishEvent(publisher);
 
         return authenticationResponse;
     }
