@@ -11,10 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 @RestController
@@ -40,7 +37,13 @@ public class AuthenticationController {
     @PostMapping("/authenticate")
     public ResponseEntity<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest
                                                                    authenticationRequest){
-        return ResponseEntity.status(200).body(authenticationService.authentication(authenticationRequest));
+        return ResponseEntity.status(201).body(authenticationService.authentication(authenticationRequest));
+    }
+
+    @GetMapping("/verification-by-otp-code")
+    public ResponseEntity<String> getOtpCode(@RequestBody String phoneNumber) {
+
+        return ResponseEntity.status(200).body(authenticationService.getOtpCode(phoneNumber));
     }
 
     @PostMapping("/parse")

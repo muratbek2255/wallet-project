@@ -12,9 +12,7 @@ import com.example.wallet.repository.PaymentRepository;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,17 +37,14 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
 
-    private JdbcTemplate jdbcTemplate;
-
 
     @Autowired
     public PaymentServiceImpl(PaymentRepository paymentRepository, FavourServiceImpl favourService,
-                              WalletServiceImpl walletService, KafkaTemplate<String, String> kafkaTemplate, JdbcTemplate jdbcTemplate) {
+                              WalletServiceImpl walletService, KafkaTemplate<String, String> kafkaTemplate) {
         this.paymentRepository = paymentRepository;
         this.favourService = favourService;
         this.walletService = walletService;
         this.kafkaTemplate = kafkaTemplate;
-        this.jdbcTemplate = jdbcTemplate;
     }
 
 
@@ -105,9 +100,6 @@ public class PaymentServiceImpl implements PaymentService {
             payment.setAccountCheck(paymentRequest.getAccountCheck());
             wallet.setSumma(wallet.getSumma().subtract(payment.getSumOfFavour()));
 
-            kafkaTemplate.send("payment", "Payment id: " + payment.getId() +
-                    " and his payment status: " + payment.getStatus());
-
             CreateEvents publisher = new CreateEvents(
                     this,
                     "Add in DB and CREATE New Payment!"
@@ -137,9 +129,6 @@ public class PaymentServiceImpl implements PaymentService {
 
         paymentRepository.save(payment);
 
-        kafkaTemplate.send("payment", "Payment id: " + payment.getId() +
-                " and his payment status confirm: " + payment.getStatus());
-
         return "Your status in payment: " + payment.getStatus();
     }
 
@@ -156,17 +145,12 @@ public class PaymentServiceImpl implements PaymentService {
             if(Milli < 1080000) {
                 payment.setStatus(PaymentStatus.STATUS_ROLLBACK);
                 wallet.setSumma(wallet.getSumma().add(payment.getSumOfFavour()));
-                kafkaTemplate.send("payment", "Payment id: " + payment.getId() +
-                        " and his payment status rollback: " + payment.getStatus());
             } else {
-                kafkaTemplate.send("payment", "Payment id: " + payment.getId() + " not to rollbacked");
                 return "3 days gone";
             }
         } else if(payment.getStatus().equals(PaymentStatus.STATUS_CREATED)) {
             payment.setStatus(PaymentStatus.STATUS_ROLLBACK);
             wallet.setSumma(wallet.getSumma().add(payment.getSumOfFavour()));
-            kafkaTemplate.send("payment", "Payment id: " + payment.getId() +
-                    " and his payment status rollback: " + payment.getStatus());
         } else {
             return "You dont have payment or your status fail";
         }
@@ -179,7 +163,6 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    @Cacheable(value = "itemCache")
     public String getByStatusPayment(String status) {
 
         List<Payment> payment = paymentRepository.getByStatus(status);

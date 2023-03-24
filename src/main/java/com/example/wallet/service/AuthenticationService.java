@@ -54,10 +54,6 @@ public class AuthenticationService {
 
         userRepository.save(user);
 
-        String message = "Your otp code";
-
-        newService.sendSms(registerRequest.getPhoneNumber(), message);
-
         var jwtToken = jwtService.generateToken(user);
 
         AuthenticationResponse authenticationResponse = new AuthenticationResponse(
@@ -80,10 +76,6 @@ public class AuthenticationService {
 
         var user = userRepository.findByPhoneNumber(authenticationRequest.getUsername());
 
-        String message = "Your otp code";
-
-        newService.sendSms(authenticationRequest.getUsername(), message);
-
         var jwtToken = jwtService.generateToken(user);
 
         AuthenticationResponse authenticationResponse = new AuthenticationResponse(jwtToken);
@@ -91,4 +83,12 @@ public class AuthenticationService {
         return authenticationResponse;
     }
 
+    public String getOtpCode(String phoneNumber) {
+
+        String message = "Your otp code";
+
+        newService.sendSms(phoneNumber, message);
+
+        return "Your verificate otp code!";
+    }
 }

@@ -4,6 +4,7 @@ import com.example.wallet.dto.WalletRequest;
 import com.example.wallet.entity.Wallet;
 import com.example.wallet.repository.WalletRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 
@@ -18,6 +19,7 @@ public class WalletServiceImpl implements WalletService{
     }
 
     @Override
+    @Cacheable(value = "itemCache")
     public Wallet getByIdWallet(int id) {
 
         Wallet wallet = walletRepository.getById(id);
