@@ -12,6 +12,7 @@ import com.example.wallet.repository.PaymentRepository;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -178,6 +179,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Cacheable(value = "itemCache")
     public String getByStatusPayment(String status) {
 
         List<Payment> payment = paymentRepository.getByStatus(status);

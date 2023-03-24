@@ -1,11 +1,11 @@
 package com.example.wallet.service;
 
 import com.example.wallet.config.TwilioConfiguration;
-import com.example.wallet.dto.SmsRequest;
+
 import com.twilio.rest.api.v2010.account.MessageCreator;
 import com.twilio.rest.api.v2010.account.Message;
-
 import com.twilio.type.PhoneNumber;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +23,8 @@ public class SmsSenderImpl implements SmsSender {
     public SmsSenderImpl(TwilioConfiguration twilioConfiguration) {
         this.twilioConfiguration = twilioConfiguration;
     }
+
+
 
     @Override
     public void sendSms(String phoneNumber, String message) {

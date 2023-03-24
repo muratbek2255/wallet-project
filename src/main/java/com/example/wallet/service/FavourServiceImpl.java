@@ -4,6 +4,7 @@ import com.example.wallet.dto.FavourRequest;
 import com.example.wallet.entity.Favour;
 import com.example.wallet.repository.FavourRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 
@@ -18,6 +19,7 @@ public class FavourServiceImpl implements FavourService{
     }
 
     @Override
+    @Cacheable(value = "itemCache")
     public Favour getByIdFavor(int id) {
         return favourRepository.getByFavourId(id);
     }
