@@ -55,4 +55,5 @@ public class Payment {
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "wallet_id")
     private Wallet wallet;
+
 }

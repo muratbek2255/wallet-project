@@ -9,9 +9,13 @@ import com.example.wallet.entity.PaymentStatus;
 import com.example.wallet.entity.Wallet;
 import com.example.wallet.repository.PaymentRepository;
 
+import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +27,7 @@ import java.util.List;
 
 
 @Service
+@Slf4j
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
@@ -34,6 +39,11 @@ public class PaymentServiceImpl implements PaymentService {
     private final WalletServiceImpl walletService;
 
     private final KafkaTemplate<String, String> kafkaTemplate;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    private static int c = 0;
 
     @Autowired
     public PaymentServiceImpl(PaymentRepository paymentRepository, FavourServiceImpl favourService,
@@ -171,11 +181,5 @@ public class PaymentServiceImpl implements PaymentService {
 
         return "Payment with status: " + payment;
 
-    }
-
-    @Scheduled(initialDelay = 1000L, fixedDelay = 3000L)
-    public void getAllStatusPayment() {
-
-        System.out.println("Hello world!");
     }
 }
